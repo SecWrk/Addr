@@ -1,0 +1,33 @@
+-------------------------------------------------------------------------------
+
+This product contains the ipaddress library by https://github.com/seancfoley, that provides IP Address utilities.
+
+  * LICENSE:
+    * license/LICENSE.ipaddress.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * https://github.com/seancfoley/IPAddress
+-------------------------------------------------------------------------------
+
+This product contains the Commons-Compress library by Apache Software Foundation, that provides Compression utilities.
+
+  * LICENSE:
+    * license/LICENSE.commons-compress.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * https://github.com/apache/commons-compress
+-------------------------------------------------------------------------------
+
+This product contains the gson library by Google, that provides Json utilities.
+
+  * LICENSE:
+    * license/LICENSE.gson.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * https://github.com/google/gson
+-------------------------------------------------------------------------------
+
+This product contains the OpenCSV library by Bytecode Pty Ltd., that provides Json utilities.
+
+  * LICENSE:
+    * license/LICENSE.opencsv.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * http://opencsv.sourceforge.net/
+-------------------------------------------------------------------------------
