@@ -93,4 +93,20 @@ public final class CityEntry {
     public String continentName() {
         return continentName;
     }
+
+    @Override
+    public String toString() {
+        return "CityEntry{" +
+                "ipStart='" + ipStart + '\'' +
+                ", ipEnd='" + ipEnd + '\'' +
+                ", continentCode='" + continentCode + '\'' +
+                ", countryCode='" + countryCode + '\'' +
+                ", stateProvince='" + stateProvince + '\'' +
+                ", city='" + city + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", countryName='" + countryName + '\'' +
+                ", continentName='" + continentName + '\'' +
+                '}';
+    }
 }

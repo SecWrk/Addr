@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * {@link CityProcessor} fetches DB-IP Lite City file, ISO-3316 and Geonames Country
@@ -50,9 +52,12 @@ public final class CityProcessor {
 
     private static final List<Iso3166Entry> ISO_LIST = new ArrayList<>();
     private static final List<GeoNameCountryEntry> GEONAME_LIST = new ArrayList<>();
-    private static final List<CityEntry> CITY_LIST = new ArrayList<>();
+    private static final Queue<CityEntry> CITY_QUEUE = new ConcurrentLinkedQueue<>();
 
     private static final Map<String, String> CONTINENT_MAPPING = new HashMap<>();
+
+    private static int fileCount = 0;
+    private static int index = 0;
 
     static {
         ZoneId z = ZoneId.of("UTC");
@@ -92,32 +97,55 @@ public final class CityProcessor {
         Downloader.downloadCompressedFile("https://download.db-ip.com/free/dbip-city-lite-" + YEAR + "-" + MONTH + ".csv.gz", cityPath);
         processCityEntries(cityPath);
 
-        try (FileWriter writer = new FileWriter("generated" + File.separator + "City.json")) {
-            for (CityEntry cityEntry : CITY_LIST) {
-                writer.write(cityEntry.ipStart());
-                writer.write(',');
-                writer.write(cityEntry.ipEnd());
-                writer.write(',');
-                writer.write(cityEntry.continentCode());
-                writer.write(',');
-                writer.write(cityEntry.countryCode());
-                writer.write(',');
-                writer.write(cityEntry.continentName());
-                writer.write(',');
-                writer.write(cityEntry.countryName());
-                writer.write(',');
-                writer.write(cityEntry.stateProvince());
-                writer.write(',');
-                writer.write(cityEntry.city());
-                writer.write(',');
-                writer.write(String.valueOf(cityEntry.latitude()));
-                writer.write(',');
-                writer.write(String.valueOf(cityEntry.longitude()));
+        // Write CSV files
+        writeFiles();
 
+        // Write File names of all CSV file in AllCity.txt
+        try (FileWriter writer = new FileWriter("generated" + File.separator + "AllCity.txt")) {
+            for (int i = 0; i <= fileCount; i++) {
+                writer.write("City-" + i + ".csv");
                 writer.write("\r\n");
-                writer.flush();
             }
         }
+    }
+
+    private static void writeFiles() throws IOException {
+        FileWriter writer = newWriter(fileCount);
+        CityEntry cityEntry = CITY_QUEUE.poll();
+        while (cityEntry != null) {
+
+            String line = cityEntry.ipStart() + ',' +
+                    cityEntry.ipEnd() + ',' +
+                    cityEntry.continentCode() + ',' +
+                    cityEntry.countryCode() + ',' +
+                    cityEntry.continentName() + ',' +
+                    cityEntry.countryName() + ',' +
+                    cityEntry.stateProvince() + ',' +
+                    cityEntry.city() + ',' +
+                    cityEntry.latitude() + ',' +
+                    cityEntry.longitude() +
+                    "\r\n";
+
+            writer.write(line);
+
+            index++;
+            // When we hit 500000 lines of file, close it and reset index and increment file count.
+            if (index == 500_000) {
+                writer.flush();
+                writer.close();
+                index = 0;
+                fileCount++;
+                writer = newWriter(fileCount);
+            }
+
+            // Pull a City Entry for next iteration
+            cityEntry = CITY_QUEUE.poll();
+        }
+        writer.close();
+    }
+
+    private static FileWriter newWriter(int fileCount) throws IOException {
+        return new FileWriter("generated" + File.separator + "City-" + fileCount + ".csv");
     }
 
     private static void processCityEntries(Path path) throws Exception {
@@ -159,7 +187,7 @@ public final class CityProcessor {
                     continentName = iso3166Entry.region();
                 }
 
-                CITY_LIST.add(CityEntry.from(ipStart, ipEnd, continentCode, countryCode, stateProvince, city, latitude, longitude,
+                CITY_QUEUE.add(CityEntry.from(ipStart, ipEnd, continentCode, countryCode, stateProvince, city, latitude, longitude,
                         countryName, continentName));
             }
         }
