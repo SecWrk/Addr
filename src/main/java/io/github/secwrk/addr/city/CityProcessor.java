@@ -129,6 +129,7 @@ public final class CityProcessor {
             };
 
             writer.writeNext(data, false);
+            writer.flushQuietly();
 
             index++;
             // When we hit 500000 lines of file, close it and reset index and increment file count.
