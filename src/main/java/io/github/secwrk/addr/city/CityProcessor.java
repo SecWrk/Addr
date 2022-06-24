@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import io.github.secwrk.addr.Downloader;
 
 import java.io.BufferedReader;
@@ -110,28 +111,28 @@ public final class CityProcessor {
     }
 
     private static void writeFiles() throws IOException {
-        FileWriter writer = newWriter(fileCount);
+        CSVWriter writer = newWriter(fileCount);
         CityEntry cityEntry = CITY_QUEUE.poll();
         while (cityEntry != null) {
 
-            String line = cityEntry.ipStart() + ',' +
-                    cityEntry.ipEnd() + ',' +
-                    cityEntry.continentCode() + ',' +
-                    cityEntry.countryCode() + ',' +
-                    cityEntry.continentName() + ',' +
-                    cityEntry.countryName() + ',' +
-                    cityEntry.stateProvince() + ',' +
-                    cityEntry.city() + ',' +
-                    cityEntry.latitude() + ',' +
-                    cityEntry.longitude() +
-                    "\r\n";
+            String[] data = {
+                    cityEntry.ipStart(),
+                    cityEntry.ipEnd(),
+                    cityEntry.continentCode(),
+                    cityEntry.countryCode(),
+                    cityEntry.continentName(),
+                    cityEntry.countryName(),
+                    cityEntry.stateProvince(),
+                    cityEntry.city(),
+                    String.valueOf(cityEntry.latitude()),
+                    String.valueOf(cityEntry.longitude())
+            };
 
-            writer.write(line);
+            writer.writeNext(data, false);
 
             index++;
             // When we hit 500000 lines of file, close it and reset index and increment file count.
             if (index == 500_000) {
-                writer.flush();
                 writer.close();
                 index = 0;
                 fileCount++;
@@ -144,8 +145,8 @@ public final class CityProcessor {
         writer.close();
     }
 
-    private static FileWriter newWriter(int fileCount) throws IOException {
-        return new FileWriter("generated" + File.separator + "City-" + fileCount + ".csv");
+    private static CSVWriter newWriter(int fileCount) throws IOException {
+        return new CSVWriter(new FileWriter("generated" + File.separator + "City-" + fileCount + ".csv"));
     }
 
     private static void processCityEntries(Path path) throws Exception {
