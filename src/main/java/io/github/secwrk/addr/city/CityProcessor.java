@@ -122,7 +122,6 @@ public final class CityProcessor {
         while (cityEntry != null) {
 
             line.append(cityEntry.ipStart()).append(',')
-                    .append(cityEntry.ipStart()).append(',')
                     .append(cityEntry.ipEnd()).append(',')
                     .append(cityEntry.continentCode()).append(',')
                     .append(cityEntry.countryCode()).append(',');
