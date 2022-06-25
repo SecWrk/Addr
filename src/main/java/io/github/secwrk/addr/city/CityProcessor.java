@@ -130,7 +130,7 @@ public final class CityProcessor {
             if (doesStringContainsSpecialCharacters(cityEntry.continentName())) {
                 line.append("\"").append(cityEntry.continentName()).append("\"").append(',');
             } else {
-                line.append(cityEntry.continentName()).append("\"").append(',');
+                line.append(cityEntry.continentName()).append(',');
             }
 
             // Country Name Check
