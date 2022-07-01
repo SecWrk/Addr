@@ -20,7 +20,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import io.github.secwrk.addr.Downloader;
+import io.github.secwrk.addr.SplitFileWriter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,11 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import static com.opencsv.ICSVWriter.DEFAULT_ESCAPE_CHARACTER;
-import static com.opencsv.ICSVWriter.DEFAULT_LINE_END;
-import static com.opencsv.ICSVWriter.DEFAULT_QUOTE_CHARACTER;
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 
 /**
  * {@link CityProcessor} fetches DB-IP Lite City file, ISO-3316 and Geonames Country
@@ -61,8 +58,8 @@ public final class CityProcessor {
 
     private static final Map<String, String> CONTINENT_MAPPING = new HashMap<>();
 
-    private static int fileCount = 0;
-    private static int index = 0;
+    private static final int fileCount = 0;
+    private static final int index = 0;
 
     static {
         ZoneId z = ZoneId.of("UTC");
@@ -108,85 +105,36 @@ public final class CityProcessor {
         // Write File names of all CSV file in AllCity.txt
         try (FileWriter writer = new FileWriter("generated" + File.separator + "AllCity.txt")) {
             for (int i = 0; i <= fileCount; i++) {
-                writer.write("City-" + i + ".csv");
+                writer.write("City.csv-" + i);
                 writer.write("\r\n");
             }
         }
     }
 
-    private static void writeFiles() throws IOException {
-        FileWriter writer = newWriter(fileCount);
-        CityEntry cityEntry = CITY_QUEUE.poll();
+    private static void writeFiles() {
+        try (CSVWriter csvWriter = new CSVWriter(new SplitFileWriter("City.csv", 50_000))) {
+            CityEntry cityEntry = CITY_QUEUE.poll();
+            while (cityEntry != null) {
+                String[] lines = {
+                        cityEntry.ipStart(),
+                        cityEntry.ipEnd(),
+                        cityEntry.continentCode(),
+                        cityEntry.countryCode(),
+                        cityEntry.continentName(),
+                        cityEntry.countryName(),
+                        cityEntry.stateProvince(),
+                        cityEntry.city(),
+                        String.valueOf(cityEntry.latitude()),
+                        String.valueOf(cityEntry.longitude())
+                };
+                csvWriter.writeNext(lines);
 
-        StringBuilder line = new StringBuilder();
-        while (cityEntry != null) {
-
-            line.append(cityEntry.ipStart()).append(',')
-                    .append(cityEntry.ipEnd()).append(',')
-                    .append(cityEntry.continentCode()).append(',')
-                    .append(cityEntry.countryCode()).append(',');
-
-            // Continent Name Check
-            if (doesStringContainsSpecialCharacters(cityEntry.continentName())) {
-                line.append("\"").append(cityEntry.continentName()).append("\"").append(',');
-            } else {
-                line.append(cityEntry.continentName()).append(',');
+                // Pull a City Entry for next iteration
+                cityEntry = CITY_QUEUE.poll();
             }
-
-            // Country Name Check
-            if (doesStringContainsSpecialCharacters(cityEntry.countryName())) {
-                line.append("\"").append(cityEntry.countryName()).append("\"").append(',');
-            } else {
-                line.append(cityEntry.countryName()).append(',');
-            }
-
-            // State Check
-            if (doesStringContainsSpecialCharacters(cityEntry.stateProvince())) {
-                line.append("\"").append(cityEntry.stateProvince()).append("\"").append(',');
-            } else {
-                line.append(cityEntry.stateProvince()).append(',');
-            }
-
-            // City Name Check
-            if (doesStringContainsSpecialCharacters(cityEntry.city())) {
-                line.append("\"").append(cityEntry.city()).append("\"").append(',');
-            } else {
-                line.append(cityEntry.city()).append(',');
-            }
-
-            // Add Latitude and Longitude
-            line.append(cityEntry.latitude()).append(',')
-                    .append(cityEntry.longitude()).append("\r\n");
-
-            writer.write(line.toString());
-            line.setLength(0); // Reset the StringBuilder
-
-            index++;
-            // When we hit 500000 lines of file, close it and reset index and increment file count.
-            if (index == 500_000) {
-                writer.flush();
-                writer.close();
-                index = 0;
-                fileCount++;
-                writer = newWriter(fileCount);
-            }
-
-            // Pull a City Entry for next iteration
-            cityEntry = CITY_QUEUE.poll();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        writer.close();
-    }
-
-    private static FileWriter newWriter(int fileCount) throws IOException {
-        return new FileWriter("generated" + File.separator + "City-" + fileCount + ".csv");
-    }
-
-    private static boolean doesStringContainsSpecialCharacters(String line) {
-        return line.indexOf(DEFAULT_QUOTE_CHARACTER) != -1
-                || line.indexOf(DEFAULT_ESCAPE_CHARACTER) != -1
-                || line.indexOf(DEFAULT_SEPARATOR) != -1
-                || line.contains(DEFAULT_LINE_END)
-                || line.contains("\r");
     }
 
     private static void processCityEntries(Path path) throws Exception {
