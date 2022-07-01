@@ -21,6 +21,10 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: '17'
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
       - name: Run CloudASNFilteredProcessor
         run: mvn -ntp -B clean compile exec:java -D"exec.mainClass"="io.github.secwrk.addr.asn.CloudASNFilteredProcessor"
       - name: Run ASNProcessor
