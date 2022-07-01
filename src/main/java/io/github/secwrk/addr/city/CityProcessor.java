@@ -58,9 +58,6 @@ public final class CityProcessor {
 
     private static final Map<String, String> CONTINENT_MAPPING = new HashMap<>();
 
-    private static final int fileCount = 0;
-    private static final int index = 0;
-
     static {
         ZoneId z = ZoneId.of("UTC");
         ZonedDateTime zdt = ZonedDateTime.now(z);
@@ -100,38 +97,42 @@ public final class CityProcessor {
         processCityEntries(cityPath);
 
         // Write CSV files
-        writeFiles();
+        int files = writeFiles();
 
         // Write File names of all CSV file in AllCity.txt
         try (FileWriter writer = new FileWriter("generated" + File.separator + "AllCity.txt")) {
-            for (int i = 0; i <= fileCount; i++) {
+            for (int i = 0; i <= files; i++) {
                 writer.write("City.csv-" + i);
                 writer.write("\r\n");
             }
         }
     }
 
-    private static void writeFiles() {
-        try (CSVWriter csvWriter = new CSVWriter(new SplitFileWriter("City.csv", 50_000))) {
-            CityEntry cityEntry = CITY_QUEUE.poll();
-            while (cityEntry != null) {
-                String[] lines = {
-                        cityEntry.ipStart(),
-                        cityEntry.ipEnd(),
-                        cityEntry.continentCode(),
-                        cityEntry.countryCode(),
-                        cityEntry.continentName(),
-                        cityEntry.countryName(),
-                        cityEntry.stateProvince(),
-                        cityEntry.city(),
-                        String.valueOf(cityEntry.latitude()),
-                        String.valueOf(cityEntry.longitude())
-                };
-                csvWriter.writeNext(lines);
+    private static int writeFiles() {
+        try (SplitFileWriter writer = new SplitFileWriter("City.csv", 50_000)) {
+            try (CSVWriter csvWriter = new CSVWriter(writer)) {
+                CityEntry cityEntry = CITY_QUEUE.poll();
+                while (cityEntry != null) {
+                    String[] lines = {
+                            cityEntry.ipStart(),
+                            cityEntry.ipEnd(),
+                            cityEntry.continentCode(),
+                            cityEntry.countryCode(),
+                            cityEntry.continentName(),
+                            cityEntry.countryName(),
+                            cityEntry.stateProvince(),
+                            cityEntry.city(),
+                            String.valueOf(cityEntry.latitude()),
+                            String.valueOf(cityEntry.longitude())
+                    };
+                    csvWriter.writeNext(lines);
 
-                // Pull a City Entry for next iteration
-                cityEntry = CITY_QUEUE.poll();
+                    // Pull a City Entry for next iteration
+                    cityEntry = CITY_QUEUE.poll();
+                }
             }
+
+            return writer.filesCount();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
