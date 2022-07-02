@@ -109,7 +109,7 @@ public final class CityProcessor {
     }
 
     private static int writeFiles() {
-        try (SplitFileWriter writer = new SplitFileWriter("City.csv", 50_000)) {
+        try (SplitFileWriter writer = new SplitFileWriter("generated" + File.separator + "City.csv", 500_000)) {
             try (CSVWriter csvWriter = new CSVWriter(writer)) {
                 CityEntry cityEntry = CITY_QUEUE.poll();
                 while (cityEntry != null) {
