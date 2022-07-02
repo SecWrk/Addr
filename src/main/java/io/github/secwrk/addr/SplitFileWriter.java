@@ -47,7 +47,8 @@ public final class SplitFileWriter extends FileWriter {
     }
 
     private FileWriter newWriter() throws IOException {
-        return new FileWriter(fileName + "-" + filesCount++);
+        filesCount++;
+        return new FileWriter(fileName + "-" + filesCount);
     }
 
     public int filesCount() {
