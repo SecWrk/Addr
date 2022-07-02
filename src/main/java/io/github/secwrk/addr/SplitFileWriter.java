@@ -28,7 +28,7 @@ public final class SplitFileWriter extends FileWriter {
     private FileWriter writer;
 
     public SplitFileWriter(String fileName, int maxWrites) throws IOException {
-        super(fileName);
+        super("DummyEmptyFile.empty");
         this.fileName = fileName;
         this.maxWrites = maxWrites;
         this.writer = newWriter();
