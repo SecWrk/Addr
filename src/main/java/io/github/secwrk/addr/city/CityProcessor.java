@@ -101,7 +101,7 @@ public final class CityProcessor {
 
         // Write File names of all CSV file in AllCity.txt
         try (FileWriter writer = new FileWriter("generated" + File.separator + "AllCity.txt")) {
-            for (int i = 0; i <= files; i++) {
+            for (int i = 1; i <= files; i++) {
                 writer.write("City.csv-" + i);
                 writer.write("\r\n");
             }
